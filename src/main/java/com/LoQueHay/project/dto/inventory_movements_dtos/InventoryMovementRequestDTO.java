@@ -1,9 +1,7 @@
 package com.LoQueHay.project.dto.inventory_movements_dtos;
 
-import com.LoQueHay.project.model.InventoryMovement;
 import com.LoQueHay.project.model.MovementType;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;

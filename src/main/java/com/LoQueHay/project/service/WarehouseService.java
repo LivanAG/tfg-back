@@ -1,10 +1,12 @@
 package com.LoQueHay.project.service;
 
 import com.LoQueHay.project.dto.warehouse_dtos.WarehouseRequestDTO;
+import com.LoQueHay.project.exception.BadRequestException;
 import com.LoQueHay.project.exception.ResourceNotFoundException;
 import com.LoQueHay.project.model.Category;
 import com.LoQueHay.project.model.MyUserEntity;
 import com.LoQueHay.project.model.Warehouse;
+import com.LoQueHay.project.repository.ProductStockRepository;
 import com.LoQueHay.project.repository.WarehouseRepository;
 import com.LoQueHay.project.util.AuthUtils;
 import org.springframework.data.domain.Page;
@@ -21,10 +23,11 @@ public class WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
     private final AuthUtils authUtils;
-
-    public WarehouseService(WarehouseRepository warehouseRepository, AuthUtils authUtils) {
+    private final ProductStockRepository productStockRepository;
+    public WarehouseService(WarehouseRepository warehouseRepository, AuthUtils authUtils, ProductStockRepository productStockRepository) {
         this.warehouseRepository = warehouseRepository;
         this.authUtils = authUtils;
+        this.productStockRepository = productStockRepository;
     }
 
     public Warehouse getById(Long id) {
@@ -81,4 +84,41 @@ public class WarehouseService {
         Warehouse existing = this.getById(id);
         warehouseRepository.delete(existing);
     }
+
+
+    @Transactional
+    public void deleteMultiple(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
+
+        List<Long> deletableIds = new java.util.ArrayList<>();
+
+        for (Long id : ids) {
+            if (id == null) continue;
+
+            Warehouse warehouse = warehouseRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found: " + id));
+
+            // Owner check
+            if (warehouse.getOwner() == null || !ownerId.equals(warehouse.getOwner().getId())) {
+                // "not found" para no filtrar si existe o no
+                throw new ResourceNotFoundException("Warehouse not found: " + id);
+            }
+
+            boolean hasStock = productStockRepository.existsByWarehouseId(id);
+            if (hasStock) {
+                throw new BadRequestException("El almacén " + warehouse.getName() + " no se puede eliminar porque tiene stock asociado.");
+            }
+
+            deletableIds.add(id);
+        }
+
+        if (!deletableIds.isEmpty()) {
+            warehouseRepository.deleteAllById(deletableIds);
+            // o deleteAllByIdInBatch(deletableIds) si lo tienes disponible
+        }
+    }
+
 }

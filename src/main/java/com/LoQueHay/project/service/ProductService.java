@@ -2,32 +2,27 @@ package com.LoQueHay.project.service;
 
 import com.LoQueHay.project.Specification.ProductSpecifications;
 import com.LoQueHay.project.dto.product_dtos.ProductRequestDTO;
-import com.LoQueHay.project.dto.product_dtos.ProductResponseDTO;
 import com.LoQueHay.project.exception.DuplicateResourceException;
 import com.LoQueHay.project.exception.ResourceNotFoundException;
 import com.LoQueHay.project.mappers.ProductMapper;
 import com.LoQueHay.project.model.*;
 import com.LoQueHay.project.repository.*;
 import com.LoQueHay.project.util.AuthUtils;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 @Service
 
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final AuthUtils authUtils; // 👈 Usamos AuthUtilsç
+    private final AuthUtils authUtils;
     private final CategoryService categoryService;
 
 

@@ -40,4 +40,7 @@ public interface ProductStockRepository extends JpaRepository<ProductStock, Long
 
     @Query("SELECT ps FROM ProductStock ps WHERE ps.expirationDate IS NOT NULL")
     List<ProductStock> findAllWithExpirationDate();
+
+    boolean existsByWarehouseId(Long warehouseId);
+
 }

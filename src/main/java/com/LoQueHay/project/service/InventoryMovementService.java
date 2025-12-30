@@ -82,6 +82,10 @@ public class InventoryMovementService {
 
         //Aqui vamos a empezar a validar los detalles del movimiento (Productos y Cantidades)
         // En dependencia si es entrada o salida validamos distinto
+
+        //Validaciones en comun
+        //La cantidad de ninguno de los elementos puede ser 0
+
         //Si es entrada
         if(dto.getMovementType() == MovementType.IN) {
 
@@ -92,6 +96,7 @@ public class InventoryMovementService {
             if (dto.getExitDetails() != null && !dto.getExitDetails().isEmpty()) {
                 throw new InvalidMovementDetailsException("Para crear un movement in debe incluir solo las entryDetails (Las exitDetail son solo para movement out)");
             }
+
 
 
             for (var detailDTO : dto.getEntryDetails()) {
@@ -157,6 +162,9 @@ public class InventoryMovementService {
             if (dto.getEntryDetails() != null && !dto.getEntryDetails().isEmpty()) {
                 throw new InvalidMovementDetailsException("Para crear un movement in debe incluir solo las entryDetails (Las exitDetail son solo para movement out)");
             }
+
+
+
             for(var detailDTO : dto.getExitDetails()) {
 
                 Product product = productService.getById(detailDTO.getProductId());
@@ -367,4 +375,28 @@ public class InventoryMovementService {
     }
 
 
+
+    @Transactional
+    public void deleteMultiple(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner().getId();
+
+        List<Long> deletableIds = new ArrayList<>();
+
+        for (Long id : ids) {
+            if (id == null) continue;
+
+            // Validar que exista y pertenezca al owner
+            InventoryMovement movement = movementRepository.findByIdAndOwnerId(id, ownerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Movement not found for this owner: " + id));
+
+            deletableIds.add(movement.getId());
+        }
+
+        if (!deletableIds.isEmpty()) {
+            movementRepository.deleteAllById(deletableIds);
+        }
+    }
 }

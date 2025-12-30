@@ -32,6 +32,19 @@ public class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ExceptionDTO> handleBadRequest(BadRequestException ex) {
+
+        ExceptionDTO error = new ExceptionDTO(
+                HttpStatus.BAD_REQUEST,
+                "Solicitud incorrecta",
+                "BAD_REQUEST",
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ExceptionDTO> handleDuplicateResource(DuplicateResourceException ex) {
         ExceptionDTO error = new ExceptionDTO(

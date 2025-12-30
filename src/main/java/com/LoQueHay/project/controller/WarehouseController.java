@@ -67,4 +67,11 @@ public class WarehouseController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+
+    @PostMapping("/delete-multiple")
+    public ResponseEntity<Void> deleteMultiple(@RequestBody List<Long> ids) {
+        service.deleteMultiple(ids);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/inventory-movements")
 public class InventoryMovementController {
@@ -73,4 +75,9 @@ public class InventoryMovementController {
     }
 
 
+    @PostMapping("/delete-multiple")
+    public ResponseEntity<Void> deleteMultiple(@RequestBody List<Long> ids) {
+        service.deleteMultiple(ids);
+        return ResponseEntity.noContent().build();
+    }
 }
