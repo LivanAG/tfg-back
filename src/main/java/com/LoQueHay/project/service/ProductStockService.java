@@ -7,6 +7,7 @@ import com.LoQueHay.project.exception.ResourceNotFoundException;
 import com.LoQueHay.project.model.*;
 import com.LoQueHay.project.repository.ProductStockRepository;
 import com.LoQueHay.project.repository.WarehouseRepository;
+import com.LoQueHay.project.util.AuthUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,12 +23,14 @@ public class ProductStockService {
     private final ProductStockRepository stockRepository;
     private final ProductService productService;
     private final ProductStockRepository productStockRepository;
+    private final AuthUtils authUtils;
 
-    public ProductStockService(WarehouseService warehouseService, ProductStockRepository stockRepository, ProductService productService, ProductStockRepository productStockRepository) {
+    public ProductStockService(WarehouseService warehouseService, ProductStockRepository stockRepository, ProductService productService, ProductStockRepository productStockRepository, AuthUtils authUtils) {
         this.warehouseService = warehouseService;
         this.stockRepository = stockRepository;
         this.productService = productService;
         this.productStockRepository = productStockRepository;
+        this.authUtils = authUtils;
     }
 
     public ProductStock getById(Long id){
@@ -43,14 +46,19 @@ public class ProductStockService {
         return stockRepository.findByProductId(productId);
     }
 
-    //Devuelve todos los products stocks que tengan mas de 0 en quantity
     public List<ProductStock> getAllAvailableStocks() {
-        return stockRepository.findByQuantityGreaterThan(0);
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
+
+        return stockRepository.findByWarehouseOwnerIdAndQuantityGreaterThan(ownerId, 0);
     }
 
 
     public List<StockByWarehouseDTO>getTotalStockValueByWarehouse(){
-        return stockRepository.getTotalStockValueByWarehouse();
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
+
+        return stockRepository.getTotalStockValueByWarehouse(ownerId);
     }
 
 
@@ -131,7 +139,11 @@ public class ProductStockService {
     }
 
     public List<ProductsExpiringDTO> getExpiringProductsByPeriod() {
-        List<ProductStock> list = productStockRepository.findAllWithExpirationDate();
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
+
+        List<ProductStock> list = productStockRepository.findAllWithExpirationDateByOwner(ownerId);
+
         List<ProductsExpiringDTO> dtos = new ArrayList<>();
 
         String periodo1 = "0-60";

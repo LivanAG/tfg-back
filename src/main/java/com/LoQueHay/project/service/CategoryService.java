@@ -63,9 +63,13 @@ public class CategoryService {
     }
 
     public List<Category> getAll() {
-        return categoryRepository.findAll();
-    }
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null
+                ? currentUser.getOwner().getId()
+                : currentUser.getId();
 
+        return categoryRepository.findByOwnerId(ownerId);
+    }
     @Transactional
     public Category update(Long id, CategoryRequestDTO dto) {
         Category existing = this.getById(id);

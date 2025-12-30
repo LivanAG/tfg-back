@@ -39,7 +39,7 @@ public class ReportService {
     }
 
     public byte[] generateReport(ReportRequestDTO request) {
-        request.setOwnerId(authUtils.getCurrentUser().getId());
+        request.setOwnerId(authUtils.getCurrentUser().getOwner().getId());
         ReportGenerator generator = reportFactory.getGenerator(request.getReportType());
         return generator.generate(request);
     }

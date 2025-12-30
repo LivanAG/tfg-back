@@ -7,6 +7,7 @@ import com.LoQueHay.project.repository.InventoryMovementRepository;
 import com.LoQueHay.project.service.InventoryMovementService;
 import com.LoQueHay.project.service.ProductStockService;
 import com.LoQueHay.project.service.reports.ReportService;
+import com.LoQueHay.project.util.AuthUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,17 +24,13 @@ import java.util.Map;
 public class ReportController {
 
     private final ReportService reportService;
-    private final ProductStockService productStockService;
-    private final InventoryMovementRepository movementRepository;
     private final InventoryMovementService inventoryMovementService;
 
-
-    public ReportController(ReportService reportService, ProductStockService productStockService, InventoryMovementRepository movementRepository, InventoryMovementService inventoryMovementService) {
+    public ReportController(ReportService reportService, InventoryMovementService inventoryMovementService) {
         this.reportService = reportService;
-        this.productStockService = productStockService;
-        this.movementRepository = movementRepository;
         this.inventoryMovementService = inventoryMovementService;
     }
+
 
     @PostMapping("/generate")
     public ResponseEntity<byte[]> generateReport(@RequestBody ReportRequestDTO request) {
@@ -86,7 +83,7 @@ public class ReportController {
 
     @GetMapping("/dashboard/monthly-sales-purchases")
     public ResponseEntity<MonthlySalesPurchasesDTO> getMonthlySalesAndPurchases() {
-        return ResponseEntity.ok(inventoryMovementService.getMonthlySalesAndPurchases(1l));
+        return ResponseEntity.ok(inventoryMovementService.getMonthlySalesAndPurchases());
     }
 }
 

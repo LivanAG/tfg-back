@@ -325,7 +325,9 @@ public class InventoryMovementService {
     }
 
 
-    public MonthlySalesPurchasesDTO getMonthlySalesAndPurchases(Long ownerId) {
+    public MonthlySalesPurchasesDTO getMonthlySalesAndPurchases() {
+        Long ownerId = authUtils.getCurrentUser().getOwner().getId();
+
         LocalDateTime startDate = LocalDateTime.now().minusMonths(6);
 
         List<InventoryMovement> movements = movementRepository.findAllMovementsWithDetails(ownerId, startDate);

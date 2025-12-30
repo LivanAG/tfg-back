@@ -27,19 +27,33 @@ public interface ProductStockRepository extends JpaRepository<ProductStock, Long
     );
 
     //Reports
-    List<ProductStock> findByQuantityGreaterThan(Integer quantity);
+    List<ProductStock> findByWarehouseOwnerIdAndQuantityGreaterThan(Long ownerId, Integer quantity);
+
+    boolean existsByProductIdAndWarehouseOwnerIdAndQuantityGreaterThan(Long productId, Long ownerId, Integer qty);
 
 
-    @Query("SELECT new com.LoQueHay.project.dto.dashboard_dtos.StockByWarehouseDTO(ps.warehouse.name, SUM(ps.quantity * ps.unitCost)) " +
-            "FROM ProductStock ps " +
-            "GROUP BY ps.warehouse.name")
-    List<StockByWarehouseDTO> getTotalStockValueByWarehouse();
+    @Query("""
+      SELECT new com.LoQueHay.project.dto.dashboard_dtos.StockByWarehouseDTO(
+        ps.warehouse.name,
+        SUM(ps.quantity * ps.unitCost)
+      )
+      FROM ProductStock ps
+      WHERE ps.warehouse.owner.id = :ownerId
+        AND ps.quantity > 0
+      GROUP BY ps.warehouse.name
+    """)
+    List<StockByWarehouseDTO> getTotalStockValueByWarehouse(@Param("ownerId") Long ownerId);
 
 
 
-
-    @Query("SELECT ps FROM ProductStock ps WHERE ps.expirationDate IS NOT NULL")
-    List<ProductStock> findAllWithExpirationDate();
+    @Query("""
+      SELECT ps
+      FROM ProductStock ps
+      WHERE ps.expirationDate IS NOT NULL
+        AND ps.warehouse.owner.id = :ownerId
+        AND ps.quantity > 0
+    """)
+    List<ProductStock> findAllWithExpirationDateByOwner(@Param("ownerId") Long ownerId);
 
     boolean existsByWarehouseId(Long warehouseId);
 

@@ -2,6 +2,7 @@ package com.LoQueHay.project.service;
 
 import com.LoQueHay.project.Specification.ProductSpecifications;
 import com.LoQueHay.project.dto.product_dtos.ProductRequestDTO;
+import com.LoQueHay.project.exception.BadRequestException;
 import com.LoQueHay.project.exception.DuplicateResourceException;
 import com.LoQueHay.project.exception.ResourceNotFoundException;
 import com.LoQueHay.project.mappers.ProductMapper;
@@ -24,12 +25,15 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final AuthUtils authUtils;
     private final CategoryService categoryService;
+    private final ProductStockRepository productStockRepository;
+    private final InventoryMovementDetailRepository inventoryMovementDetailRepository;
 
-
-    public ProductService(ProductRepository productRepository, AuthUtils authUtils, CategoryService categoryService) {
+    public ProductService(ProductRepository productRepository, AuthUtils authUtils, CategoryService categoryService, ProductStockRepository productStockRepository, InventoryMovementDetailRepository inventoryMovementDetailRepository) {
         this.productRepository = productRepository;
         this.authUtils = authUtils;
         this.categoryService = categoryService;
+        this.productStockRepository = productStockRepository;
+        this.inventoryMovementDetailRepository = inventoryMovementDetailRepository;
     }
 
     public List<Product> getAll(){
@@ -140,4 +144,40 @@ public class ProductService {
         this.getById(id);
         productRepository.deleteById(id);
     }
+
+    @Transactional
+    public void deleteMultiple(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
+
+        for (Long id : ids) {
+            if (id == null) continue;
+
+            // 1) Validar que exista y sea del owner (multitenant)
+            Product product = productRepository.findByIdAndOwnerId(id, ownerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found for this owner: " + id));
+
+            // 2) Bloquear si tiene stock disponible
+            boolean hasStock = productStockRepository
+                    .existsByProductIdAndWarehouseOwnerIdAndQuantityGreaterThan(product.getId(), ownerId, 0);
+
+            if (hasStock) {
+                throw new BadRequestException("El producto '" + product.getName() + "' no se puede eliminar porque tiene stock.");
+            }
+
+            // 3) Bloquear si tiene movimientos (histórico)
+            boolean hasMovements = inventoryMovementDetailRepository
+                    .existsByProductIdAndMovementOwnerId(product.getId(), ownerId);
+
+            if (hasMovements) {
+                throw new BadRequestException("El producto '" + product.getName() + "' no se puede eliminar porque tiene movimientos asociados.");
+            }
+
+            // 4) Eliminar (si usas orphanRemoval en details/stock etc, ok)
+            productRepository.delete(product);
+        }
+    }
+
 }

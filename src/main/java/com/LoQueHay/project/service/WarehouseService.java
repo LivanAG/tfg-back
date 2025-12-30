@@ -64,8 +64,14 @@ public class WarehouseService {
     }
 
     public List<Warehouse> getAll() {
-        return warehouseRepository.findAll();
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null
+                ? currentUser.getOwner().getId()
+                : currentUser.getId();
+
+        return warehouseRepository.findByOwnerId(ownerId);
     }
+
 
     @Transactional
     public Warehouse update(Long id, WarehouseRequestDTO dto) {
