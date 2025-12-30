@@ -6,6 +6,7 @@ import com.LoQueHay.project.dto.dashboard_dtos.MonthlySalesPurchasesDTO;
 import com.LoQueHay.project.dto.inventory_movements_dtos.InventoryMovementRequestDTO;
 import com.LoQueHay.project.dto.inventory_movements_dtos.InventoryMovementResponseDTO;
 import com.LoQueHay.project.dto.product_stock_dtos.ProductStockRequestDTO;
+import com.LoQueHay.project.exception.BadRequestException;
 import com.LoQueHay.project.exception.InsufficientStockException;
 import com.LoQueHay.project.exception.InvalidMovementDetailsException;
 import com.LoQueHay.project.exception.ResourceNotFoundException;
@@ -109,6 +110,9 @@ public class InventoryMovementService {
 
                 LocalDate expirationDate = null;
                 if (detailDTO.getExpirationDate() != null && !detailDTO.getExpirationDate().isEmpty()) {
+                    if(!product.getHasExpirationDate()){
+                        throw new BadRequestException("El producto: "+product.getName()+" no tiene expiracion");
+                    }
                     expirationDate = LocalDate.parse(detailDTO.getExpirationDate());
                 }
 

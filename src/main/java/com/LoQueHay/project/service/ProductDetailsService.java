@@ -6,7 +6,6 @@ import com.LoQueHay.project.exception.ResourceNotFoundException;
 import com.LoQueHay.project.model.Product;
 import com.LoQueHay.project.model.ProductDetails;
 import com.LoQueHay.project.repository.ProductDetailsRepository;
-import com.LoQueHay.project.service.ProductService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,8 @@ public class ProductDetailsService {
     }
 
     public ProductDetails getByProduct(Long productId) {
-        return detailsRepository.findByProductId(productId).orElseThrow(() -> new ResourceNotFoundException("Product details not found"));
+        return detailsRepository.findByProductId(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product details not found"));
     }
 
     @Transactional
@@ -32,17 +32,19 @@ public class ProductDetailsService {
         Product product = productService.getById(productId);
 
         Optional<ProductDetails> existingDetails = detailsRepository.findByProductId(productId);
-        if(existingDetails.isPresent()){
+        if (existingDetails.isPresent()) {
             throw new DuplicateResourceException("Product details already exists");
         }
 
         ProductDetails details = new ProductDetails();
         details.setProduct(product);
+
         details.setWeight(dto.getWeight());
+        details.setWeightUnit(dto.getWeightUnit());
+
+        details.setLength(dto.getLength());
         details.setWidth(dto.getWidth());
-        details.setHeight(dto.getHeight());
-        details.setDepth(dto.getDepth());
-        details.setUnitOfMeasure(dto.getUnitOfMeasure());
+        details.setDimensionUnit(dto.getDimensionUnit());
 
         return detailsRepository.save(details);
     }
@@ -50,13 +52,13 @@ public class ProductDetailsService {
     @Transactional
     public ProductDetails update(Long productId, ProductDetailsRequestDTO dto) {
         ProductDetails existing = getByProduct(productId);
-        if (existing == null) throw new ResourceNotFoundException("Product details not found");
 
         existing.setWeight(dto.getWeight());
+        existing.setWeightUnit(dto.getWeightUnit());
+
+        existing.setLength(dto.getLength());
         existing.setWidth(dto.getWidth());
-        existing.setHeight(dto.getHeight());
-        existing.setDepth(dto.getDepth());
-        existing.setUnitOfMeasure(dto.getUnitOfMeasure());
+        existing.setDimensionUnit(dto.getDimensionUnit());
 
         return detailsRepository.save(existing);
     }
@@ -64,7 +66,6 @@ public class ProductDetailsService {
     @Transactional
     public void delete(Long productId) {
         ProductDetails existing = getByProduct(productId);
-        if (existing == null) throw new ResourceNotFoundException("Product details not found");
         detailsRepository.delete(existing);
     }
 }

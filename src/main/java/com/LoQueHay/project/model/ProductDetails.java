@@ -16,21 +16,20 @@ public class ProductDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Peso
     private Double weight;
+    private String weightUnit; // kg, g, lb
+
+    // Dimensiones
+    private Double length;
     private Double width;
-    private Double height;
-    private Double depth;
-
-    private String unitOfMeasure; // cm, kg, litros, etc.
-
+    private String dimensionUnit; // cm, m, in
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
@@ -52,6 +51,22 @@ public class ProductDetails {
         this.weight = weight;
     }
 
+    public String getWeightUnit() {
+        return weightUnit;
+    }
+
+    public void setWeightUnit(String weightUnit) {
+        this.weightUnit = weightUnit;
+    }
+
+    public Double getLength() {
+        return length;
+    }
+
+    public void setLength(Double length) {
+        this.length = length;
+    }
+
     public Double getWidth() {
         return width;
     }
@@ -60,36 +75,12 @@ public class ProductDetails {
         this.width = width;
     }
 
-    public Double getHeight() {
-        return height;
+    public String getDimensionUnit() {
+        return dimensionUnit;
     }
 
-    public void setHeight(Double height) {
-        this.height = height;
-    }
-
-    public Double getDepth() {
-        return depth;
-    }
-
-    public void setDepth(Double depth) {
-        this.depth = depth;
-    }
-
-    public String getUnitOfMeasure() {
-        return unitOfMeasure;
-    }
-
-    public void setUnitOfMeasure(String unitOfMeasure) {
-        this.unitOfMeasure = unitOfMeasure;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
+    public void setDimensionUnit(String dimensionUnit) {
+        this.dimensionUnit = dimensionUnit;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -106,6 +97,14 @@ public class ProductDetails {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
     }
 }
 

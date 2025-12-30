@@ -3,57 +3,29 @@ package com.LoQueHay.project.dto.product_details_dtos;
 public class ProductDetailsResponseDTO {
 
     private Long id;
+
     private Double weight;
+    private String weightUnit;
+
+    private Double length;
     private Double width;
-    private Double height;
-    private Double depth;
-    private String unitOfMeasure;
+    private String dimensionUnit;
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Double getWeight() { return weight; }
+    public void setWeight(Double weight) { this.weight = weight; }
 
-    public Double getWeight() {
-        return weight;
-    }
+    public String getWeightUnit() { return weightUnit; }
+    public void setWeightUnit(String weightUnit) { this.weightUnit = weightUnit; }
 
-    public void setWeight(Double weight) {
-        this.weight = weight;
-    }
+    public Double getLength() { return length; }
+    public void setLength(Double length) { this.length = length; }
 
-    public Double getWidth() {
-        return width;
-    }
+    public Double getWidth() { return width; }
+    public void setWidth(Double width) { this.width = width; }
 
-    public void setWidth(Double width) {
-        this.width = width;
-    }
-
-    public Double getHeight() {
-        return height;
-    }
-
-    public void setHeight(Double height) {
-        this.height = height;
-    }
-
-    public Double getDepth() {
-        return depth;
-    }
-
-    public void setDepth(Double depth) {
-        this.depth = depth;
-    }
-
-    public String getUnitOfMeasure() {
-        return unitOfMeasure;
-    }
-
-    public void setUnitOfMeasure(String unitOfMeasure) {
-        this.unitOfMeasure = unitOfMeasure;
-    }
+    public String getDimensionUnit() { return dimensionUnit; }
+    public void setDimensionUnit(String dimensionUnit) { this.dimensionUnit = dimensionUnit; }
 }
