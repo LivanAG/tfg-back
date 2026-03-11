@@ -11,47 +11,65 @@ import java.time.LocalDate;
 public class ProductStockSpecs {
 
     /**
-     * @param ownerId     obligatorio
-     * @param warehouseId opcional
-     * @param categoryId  opcional
-     * @param expiringOnly si true filtra solo stocks próximos a vencer
+     * @param ownerId      obligatorio
+     * @param warehouseId  opcional — filtra por almacén
+     * @param categoryId   opcional — filtra por categoría
+     * @param productId    opcional — filtra por producto específico
+     * @param expiringOnly si true filtra solo stocks con fecha de expiración
+     * @param dateTo       si expiringOnly=true, límite superior de la fecha de expiración (null = sin límite superior)
      */
     public static Specification<ProductStock> filterStocks(
             Long ownerId,
             Long warehouseId,
             Long categoryId,
-            boolean expiringOnly
+            Long productId,
+            boolean expiringOnly,
+            LocalDate dateTo
     ) {
         return (root, query, cb) -> {
-            // JOIN con producto y categoría
             Join<Object, Object> product = root.join("product", JoinType.INNER);
             Join<Object, Object> category = product.join("category", JoinType.INNER);
 
-            // Predicados dinámicos
             Predicate predicate = cb.conjunction();
 
-            // Filtrar por owner a través del producto (obligatorio)
+            // Owner (obligatorio)
             predicate = cb.and(predicate, cb.equal(product.get("owner").get("id"), ownerId));
 
-            // Filtrar por almacén si se pasa
+            // Solo stock disponible (cantidad > 0)
+            predicate = cb.and(predicate, cb.gt(root.get("quantity"), 0));
+
             if (warehouseId != null) {
                 predicate = cb.and(predicate, cb.equal(root.get("warehouse").get("id"), warehouseId));
             }
 
-            // Filtrar por categoría si se pasa
             if (categoryId != null) {
                 predicate = cb.and(predicate, cb.equal(category.get("id"), categoryId));
             }
 
-            // Filtrar por fecha de expiración solo si se desea
+            if (productId != null) {
+                predicate = cb.and(predicate, cb.equal(product.get("id"), productId));
+            }
+
             if (expiringOnly) {
-                predicate = cb.and(
-                        predicate,
-                        cb.between(root.get("expirationDate"), LocalDate.now(), LocalDate.now().plusDays(30))
-                );
+                // Tiene fecha de expiración
+                predicate = cb.and(predicate, cb.isNotNull(root.get("expirationDate")));
+                // Desde hoy
+                predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("expirationDate"), LocalDate.now()));
+                // Hasta la fecha límite (si se pasa)
+                if (dateTo != null) {
+                    predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("expirationDate"), dateTo));
+                }
             }
 
             return predicate;
         };
+    }
+
+    // Compatibilidad con llamadas existentes (sin productId ni dateTo)
+    public static Specification<ProductStock> filterStocks(
+            Long ownerId, Long warehouseId, Long categoryId, boolean expiringOnly
+    ) {
+        LocalDate expiryLimit = expiringOnly ? LocalDate.now().plusDays(30) : null;
+        return filterStocks(ownerId, warehouseId, categoryId, null, expiringOnly, expiryLimit);
     }
 }

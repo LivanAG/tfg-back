@@ -9,6 +9,7 @@ public class ProductStockResponseDTO {
     private String lotNumber;
     private LocalDate expirationDate;
     private Long warehouseId;
+    private String warehouseName;
     private Double unitCost;
 
     public Double getUnitCost() {
@@ -57,5 +58,13 @@ public class ProductStockResponseDTO {
 
     public void setWarehouseId(Long warehouseId) {
         this.warehouseId = warehouseId;
+    }
+
+    public String getWarehouseName() {
+        return warehouseName;
+    }
+
+    public void setWarehouseName(String warehouseName) {
+        this.warehouseName = warehouseName;
     }
 }

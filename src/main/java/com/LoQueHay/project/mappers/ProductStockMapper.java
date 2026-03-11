@@ -32,6 +32,7 @@ public class ProductStockMapper {
         dto.setLotNumber(stock.getLotNumber());
         dto.setExpirationDate(stock.getExpirationDate());
         dto.setWarehouseId(stock.getWarehouse().getId());
+        dto.setWarehouseName(stock.getWarehouse().getName());
         dto.setUnitCost(stock.getUnitCost());
         return dto;
     }

@@ -6,6 +6,7 @@ import com.LoQueHay.project.dto.dashboard_dtos.ProductsExpiringDTO;
 import com.LoQueHay.project.dto.dashboard_dtos.StockByWarehouseDTO;
 import com.LoQueHay.project.dto.report_dtos.ReportRequestDTO;
 import com.LoQueHay.project.model.MovementType;
+import com.LoQueHay.project.model.MyUserEntity;
 import com.LoQueHay.project.service.CategoryService;
 import com.LoQueHay.project.service.InventoryMovementService;
 import com.LoQueHay.project.service.ProductService;
@@ -62,8 +63,10 @@ public class ReportService {
         DashboardSummaryDTO summaryDTO = new DashboardSummaryDTO();
         summaryDTO.setTotalInventoryValue(this.getTotalCost());
         summaryDTO.setTotalProductsInStock(this.getCountDistinctProductsInStock());
-        summaryDTO.setPurchasesThisMonth(inventoryMovementService.getPurchasesThisMonth(authUtils.getCurrentUser().getId()));
-        summaryDTO.setSalesThisMonth(inventoryMovementService.getSalesThisMonth(authUtils.getCurrentUser().getId()));
+        MyUserEntity currentUser = authUtils.getCurrentUser();
+        Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
+        summaryDTO.setPurchasesThisMonth(inventoryMovementService.getPurchasesThisMonth(ownerId));
+        summaryDTO.setSalesThisMonth(inventoryMovementService.getSalesThisMonth(ownerId));
         return summaryDTO;
     }
 

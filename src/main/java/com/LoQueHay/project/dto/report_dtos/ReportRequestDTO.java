@@ -11,6 +11,7 @@ public class ReportRequestDTO {
     private String reportType;
     private Long warehouseId;
     private Long categoryId;
+    private Long productId;
     private LocalDate dateFrom;
     private LocalDate dateTo;
     private String format;
@@ -39,6 +40,14 @@ public class ReportRequestDTO {
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
     }
 
     public LocalDate getDateFrom() {

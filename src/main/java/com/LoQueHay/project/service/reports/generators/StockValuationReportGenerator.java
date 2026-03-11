@@ -7,6 +7,7 @@ import com.LoQueHay.project.service.reports.pdf.PdfReportBuilder;
 import com.LoQueHay.project.service.reports.specifications.ProductStockSpecs;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,36 +24,42 @@ public class StockValuationReportGenerator implements ReportGenerator {
     @Override
     public byte[] generate(ReportRequestDTO request) {
 
-        // 1️⃣ Aplicar Specification dinámica para stock (sin fechas)
         List<ProductStock> stocks = productStockRepository.findAll(
                 ProductStockSpecs.filterStocks(
                         request.getOwnerId(),
                         request.getWarehouseId(),
                         request.getCategoryId(),
-                        false
+                        request.getProductId(),
+                        false,
+                        null
                 )
         );
 
-        // 2️⃣ Convertir cada stock a Map para PDF dinámico
         List<Map<String, Object>> rows = stocks.stream()
                 .map(stock -> {
-                    Map<String, Object> row = new java.util.HashMap<>();
+                    Map<String, Object> row = new HashMap<>();
                     row.put("Producto", stock.getProduct().getName());
+                    row.put("SKU", stock.getProduct().getSku() != null ? stock.getProduct().getSku() : "—");
                     row.put("Categoría", stock.getProduct().getCategory().getName());
                     row.put("Almacén", stock.getWarehouse().getName());
-                    row.put("Cantidad", stock.getQuantity());
                     row.put("Lote", stock.getLotNumber());
-                    row.put("Fecha de Expiración", stock.getExpirationDate());
+                    row.put("Cantidad", stock.getQuantity());
+                    row.put("Costo Unitario ($)", stock.getUnitCost());
+                    row.put("Valor Total ($)", stock.getQuantity() * stock.getUnitCost());
+                    if (stock.getExpirationDate() != null) {
+                        row.put("Vencimiento", stock.getExpirationDate().toString());
+                    } else {
+                        row.put("Vencimiento", "—");
+                    }
                     return row;
                 })
                 .collect(Collectors.toList());
 
-        // 3️⃣ Definir columnas
         List<String> columns = List.of(
-                "Producto", "Categoría", "Almacén", "Cantidad", "Lote", "Fecha de Expiración"
+                "Producto", "SKU", "Categoría", "Almacén", "Lote",
+                "Cantidad", "Costo Unitario ($)", "Valor Total ($)", "Vencimiento"
         );
 
-        // 4️⃣ Generar PDF usando PdfReportBuilder
-        return PdfReportBuilder.buildReport("Reporte de Valoración de Stock", columns, rows);
+        return PdfReportBuilder.buildReport("Valoración de Stock por Lote", columns, rows);
     }
 }

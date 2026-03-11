@@ -22,14 +22,12 @@ public class ProductStockService {
     private final WarehouseService warehouseService;
     private final ProductStockRepository stockRepository;
     private final ProductService productService;
-    private final ProductStockRepository productStockRepository;
     private final AuthUtils authUtils;
 
-    public ProductStockService(WarehouseService warehouseService, ProductStockRepository stockRepository, ProductService productService, ProductStockRepository productStockRepository, AuthUtils authUtils) {
+    public ProductStockService(WarehouseService warehouseService, ProductStockRepository stockRepository, ProductService productService, AuthUtils authUtils) {
         this.warehouseService = warehouseService;
         this.stockRepository = stockRepository;
         this.productService = productService;
-        this.productStockRepository = productStockRepository;
         this.authUtils = authUtils;
     }
 
@@ -142,7 +140,7 @@ public class ProductStockService {
         MyUserEntity currentUser = authUtils.getCurrentUser();
         Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
 
-        List<ProductStock> list = productStockRepository.findAllWithExpirationDateByOwner(ownerId);
+        List<ProductStock> list = stockRepository.findAllWithExpirationDateByOwner(ownerId);
 
         List<ProductsExpiringDTO> dtos = new ArrayList<>();
 

@@ -70,7 +70,7 @@ public class SecurityConfig {
         // 3. Definir reglas de acceso según las rutas
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/auth/login", "/auth/register-owner").permitAll()      // /auth/** es público
+                .requestMatchers("/auth/login", "/auth/register-owner", "/auth/forgot-password", "/auth/reset-password", "/auth/reset-password/validate").permitAll()      // /auth/** es público
                 .requestMatchers("/admin/**").hasAuthority("admin:access")
                 .anyRequest().authenticated()                  // cualquier otra ruta necesita token válido
         );

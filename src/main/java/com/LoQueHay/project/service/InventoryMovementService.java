@@ -176,7 +176,7 @@ public class InventoryMovementService {
                 //Si es una salida comprobamos que haya stock disponible para retirar de ese producto en ese almacen
                 // Si no hay lanzamos excepcion
                 if(movement.getMovementType() == MovementType.OUT && !stockService.IsEnoughStock(detailDTO.getQuantity(),product,movement.getWarehouse())){
-                    throw new InsufficientStockException(product.getId());
+                    throw new InsufficientStockException(product.getId(), product.getName());
                 }
                 // Si hay stock suficiente descontamos
 
@@ -227,7 +227,7 @@ public class InventoryMovementService {
             int page,
             int size
     ) {
-        Long ownerId = authUtils.getCurrentUser().getOwner().getId();
+        MyUserEntity _u = authUtils.getCurrentUser(); Long ownerId = _u.getOwner() != null ? _u.getOwner().getId() : _u.getId();
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Specification<InventoryMovement> spec = InventoryMovementSpecifications.belongsToOwner(ownerId);
@@ -277,7 +277,7 @@ public class InventoryMovementService {
             int page,
             int size
     ) {
-        Long ownerId = authUtils.getCurrentUser().getOwner().getId();
+        MyUserEntity _u = authUtils.getCurrentUser(); Long ownerId = _u.getOwner() != null ? _u.getOwner().getId() : _u.getId();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
@@ -326,18 +326,18 @@ public class InventoryMovementService {
 
 
     public MonthlySalesPurchasesDTO getMonthlySalesAndPurchases() {
-        Long ownerId = authUtils.getCurrentUser().getOwner().getId();
+        MyUserEntity _u = authUtils.getCurrentUser(); Long ownerId = _u.getOwner() != null ? _u.getOwner().getId() : _u.getId();
 
         LocalDateTime startDate = LocalDateTime.now().minusMonths(6);
 
         List<InventoryMovement> movements = movementRepository.findAllMovementsWithDetails(ownerId, startDate);
 
-        // Mapa: mes -> { tipoMovimiento -> total }
-        Map<Integer, Map<MovementType, Double>> monthlyTotals = new HashMap<>();
+        // Mapa: YearMonth -> { tipoMovimiento -> total }
+        Map<YearMonth, Map<MovementType, Double>> monthlyTotals = new HashMap<>();
 
         for (InventoryMovement im : movements) {
-            int month = im.getCreatedAt().getMonthValue();
-            MovementType movementType = im.getMovementType(); // "IN" o "OUT"
+            YearMonth yearMonth = YearMonth.from(im.getCreatedAt());
+            MovementType movementType = im.getMovementType();
 
             double movementTotal = im.getDetails().stream()
                     .mapToDouble(d -> {
@@ -351,30 +351,24 @@ public class InventoryMovementService {
                     .sum();
 
             monthlyTotals
-                    .computeIfAbsent(month, k -> new HashMap<>())
+                    .computeIfAbsent(yearMonth, k -> new HashMap<>())
                     .merge(movementType, movementTotal, Double::sum);
         }
 
-        // Ordenar los meses que realmente tienen datos
-        List<Integer> sortedMonths = monthlyTotals.keySet().stream()
+        List<YearMonth> sortedMonths = monthlyTotals.keySet().stream()
                 .sorted()
                 .collect(Collectors.toList());
 
-        // Generar listas paralelas
         List<String> months = new ArrayList<>();
         List<Double> sales = new ArrayList<>();
         List<Double> purchases = new ArrayList<>();
 
-        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH);
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM yyyy", Locale.forLanguageTag("es"));
 
-        for (Integer month : sortedMonths) {
-            String monthName = YearMonth.of(LocalDate.now().getYear(), month)
-                    .atDay(1)
-                    .format(monthFormatter);
-
-            months.add(monthName);
-            sales.add(monthlyTotals.get(month).getOrDefault(MovementType.OUT, 0.0));
-            purchases.add(monthlyTotals.get(month).getOrDefault(MovementType.IN, 0.0));
+        for (YearMonth ym : sortedMonths) {
+            months.add(ym.format(monthFormatter));
+            sales.add(monthlyTotals.get(ym).getOrDefault(MovementType.OUT, 0.0));
+            purchases.add(monthlyTotals.get(ym).getOrDefault(MovementType.IN, 0.0));
         }
 
         return new MonthlySalesPurchasesDTO(months, sales, purchases);
@@ -387,7 +381,7 @@ public class InventoryMovementService {
         if (ids == null || ids.isEmpty()) return;
 
         MyUserEntity currentUser = authUtils.getCurrentUser();
-        Long ownerId = currentUser.getOwner().getId();
+        Long ownerId = currentUser.getOwner() != null ? currentUser.getOwner().getId() : currentUser.getId();
 
         List<Long> deletableIds = new ArrayList<>();
 

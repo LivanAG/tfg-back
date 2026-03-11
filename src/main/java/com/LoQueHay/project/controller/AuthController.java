@@ -2,6 +2,7 @@ package com.LoQueHay.project.controller;
 
 import com.LoQueHay.project.dto.auth_dtos.*;
 import com.LoQueHay.project.service.AuthService;
+import com.LoQueHay.project.service.PasswordResetService;
 import com.LoQueHay.project.util.AuthUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -11,15 +12,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-
-
     private final AuthService authService;
     private final AuthUtils authUtils;
+    private final PasswordResetService passwordResetService;
 
-
-    public AuthController(AuthService authService, AuthUtils authUtils) {
+    public AuthController(AuthService authService, AuthUtils authUtils, PasswordResetService passwordResetService) {
         this.authService = authService;
         this.authUtils = authUtils;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/login")
@@ -70,5 +70,27 @@ public class AuthController {
         return ResponseEntity.ok("Password updated successfully");
     }
 
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestPasswordReset(request.getEmail());
+        // Siempre devolver 200 para no revelar si el email existe
+        return ResponseEntity.ok("Si el email está registrado, recibirás un enlace para restablecer tu contraseña.");
+    }
+
+    @GetMapping("/reset-password/validate")
+    public ResponseEntity<?> validateResetToken(@RequestParam String token) {
+        boolean valid = passwordResetService.validateToken(token);
+        if (!valid) {
+            return ResponseEntity.badRequest().body("Token inválido o expirado.");
+        }
+        return ResponseEntity.ok("Token válido.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok("Contraseña restablecida correctamente.");
+    }
 
 }

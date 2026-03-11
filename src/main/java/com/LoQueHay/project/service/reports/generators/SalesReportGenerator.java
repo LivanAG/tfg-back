@@ -9,6 +9,7 @@ import com.LoQueHay.project.service.reports.specifications.InventoryMovementSpec
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,46 +26,44 @@ public class SalesReportGenerator implements ReportGenerator {
     @Override
     public byte[] generate(ReportRequestDTO request) {
 
-        // 1️⃣ Crear Specification dinámica
         Specification<InventoryMovement> spec = InventoryMovementSpecs.filterPurchases(
                 request.getOwnerId(),
                 request.getWarehouseId(),
                 request.getCategoryId(),
-                MovementType.OUT, // Ventas
+                MovementType.OUT,
                 request.getDateFrom().atStartOfDay(),
                 request.getDateTo().atTime(23, 59, 59)
         );
 
-        // 2️⃣ Obtener movimientos según la spec
         List<InventoryMovement> sales = inventoryMovementRepository.findAll(spec);
 
-        // 3️⃣ Convertir cada detalle de movimiento a Map<String,Object> para PDF
         List<Map<String, Object>> rows = sales.stream()
                 .flatMap(movement -> movement.getDetails().stream()
                         .map(detail -> {
-                            Map<String, Object> row = new java.util.HashMap<>();
+                            // null-safe: salidas viejas pueden no tener sellPriceUnit
+                            double precio = detail.getSellPriceUnit() != null ? detail.getSellPriceUnit() : 0.0;
+                            int cantidad = detail.getQuantity() != null ? detail.getQuantity() : 0;
+
+                            Map<String, Object> row = new HashMap<>();
+                            row.put("Fecha", movement.getCreatedAt().toLocalDate().toString());
+                            row.put("Referencia", movement.getReferenceDocument() != null ? movement.getReferenceDocument() : "—");
+                            row.put("Almacén", movement.getWarehouse().getName());
                             row.put("Producto", detail.getProduct().getName());
                             row.put("Categoría", detail.getProduct().getCategory().getName());
-                            row.put("Almacén", movement.getWarehouse().getName());
-                            row.put("Cantidad", detail.getQuantity());
-                            row.put("Precio Unitario Venta", detail.getSellPriceUnit());
-                            row.put("Valor Total", detail.getSellPriceUnit() * detail.getQuantity());
-                            row.put("Lote", detail.getLotNumber());
-                            row.put("Fecha de Expiración", detail.getExpirationDate());
-                            row.put("Referencia", movement.getReferenceDocument());
+                            row.put("Cantidad", cantidad);
+                            row.put("Precio Unitario ($)", precio);
+                            row.put("Total Venta ($)", precio * cantidad);
                             return row;
                         })
                 )
+                .sorted((a, b) -> String.valueOf(a.get("Fecha")).compareTo(String.valueOf(b.get("Fecha"))))
                 .collect(Collectors.toList());
 
-        // 4️⃣ Definir columnas dinámicas
         List<String> columns = List.of(
-                "Producto", "Categoría", "Almacén", "Cantidad",
-                "Precio Unitario Venta", "Valor Total", "Lote",
-                "Fecha de Expiración", "Referencia"
+                "Fecha", "Referencia", "Almacén", "Producto", "Categoría",
+                "Cantidad", "Precio Unitario ($)", "Total Venta ($)"
         );
 
-        // 5️⃣ Generar PDF usando PdfReportBuilder genérico
         return PdfReportBuilder.buildReport("Reporte de Ventas", columns, rows);
     }
 }

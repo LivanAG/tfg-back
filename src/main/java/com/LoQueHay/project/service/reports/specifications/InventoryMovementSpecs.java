@@ -21,13 +21,23 @@ public class InventoryMovementSpecs {
             LocalDateTime dateFrom,
             LocalDateTime dateTo
     ) {
+        return filterPurchases(ownerId, warehouseId, categoryId, null, type, dateFrom, dateTo);
+    }
+
+    public static Specification<InventoryMovement> filterPurchases(
+            Long ownerId,
+            Long warehouseId,
+            Long categoryId,
+            Long productId,
+            MovementType type,
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo
+    ) {
         return (Root<InventoryMovement> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
 
-            // JOIN con detalles y productos
             var details = root.join("details");
             var product = details.join("product");
 
-            // Predicados dinámicos usando jakarta.persistence.criteria.Predicate
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(cb.equal(root.get("owner").get("id"), ownerId));
@@ -40,6 +50,10 @@ public class InventoryMovementSpecs {
 
             if (categoryId != null) {
                 predicates.add(cb.equal(product.get("category").get("id"), categoryId));
+            }
+
+            if (productId != null) {
+                predicates.add(cb.equal(product.get("id"), productId));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
