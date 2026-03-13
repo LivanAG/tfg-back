@@ -10,7 +10,6 @@ import java.util.List;
 
 @Configuration
 public class CorsConfig {
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfig = new CorsConfiguration();
@@ -22,12 +21,12 @@ public class CorsConfig {
                 "http://68.183.219.154:80",
                 "http://68.183.219.154:8080"
         ));
+        corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
         corsConfig.setAllowedHeaders(List.of("*"));
-        corsConfig.setAllowCredentials(true); // necesario si envías JWT en cabecera
-
+        corsConfig.setAllowCredentials(true);
+        corsConfig.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
-
         return source;
     }
 }
