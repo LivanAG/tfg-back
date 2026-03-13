@@ -14,7 +14,14 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(List.of("http://localhost:3001", "http://localhost", "http://68.183.219.154")); // Frontend        corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        corsConfig.setAllowedOrigins(List.of(
+                "http://localhost:3001",
+                "http://localhost",
+                "http://localhost:80",
+                "http://68.183.219.154",
+                "http://68.183.219.154:80",
+                "http://68.183.219.154:8080"
+        ));
         corsConfig.setAllowedHeaders(List.of("*"));
         corsConfig.setAllowCredentials(true); // necesario si envías JWT en cabecera
 
